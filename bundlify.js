@@ -83,15 +83,47 @@ const bundleFiles = async (entryFile) => {
 
   const output = [];
 
+  output.push(`
+(function(modules) {
+  var installedModules = {};
+
+  function require(moduleId) {
+    if (installedModules[moduleId]) {
+      return installedModules[moduleId].exports;
+    }
+
+    var module = installedModules[moduleId] = {
+      id: moduleId,
+      loaded: false,
+      exports: {}
+    };
+
+    modules[moduleId].call(module.exports, module, module.exports, require);
+
+    module.loaded = true;
+
+    return module.exports;
+  }
+
+  require.resolve = function(request) {
+    return modules[request] ? request : null;
+  };
+
+  require.ensure = function(request, callback) {
+    callback(require(request));
+  };
+
+  return require(${modules[entryFile].id});
+})({
+`);
+
   Object.values(modules).forEach(module => {
-    output.push(`// Module ${module.id}`);
-    output.push(`(function(module, exports, require) {`);
+    output.push(`  ${module.id}: function(module, exports, require) {`);
     output.push(module.content);
-    output.push(`})({id: ${module.id}}, {}, require);`);
+    output.push(`  },`);
   });
 
-  output.push(`// Entry point`);
-  output.push(`require(${modules[entryFile].id});`);
+  output.push(`});`);
 
   return output.join('\n');
 };
