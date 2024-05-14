@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A simplistic JavaScript bundler",
   "main": "bundlify.js",
+  "type": "module",
   "scripts": {
     "bundlify": "node bundlify.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -19,6 +20,6 @@
   "homepage": "https://github.com/CIPHERTron/bundlify#readme",
   "dependencies": {
     "bun": "^1.1.8",
-    "child_process": "^1.0.2"
+    "execa": "^9.1.0"
   }
 }
