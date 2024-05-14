@@ -1,6 +1,7 @@
-import arr from './module.js';
+const { arr } = require('./module.js');
 
 const displayFunc = () => {
+    console.log(arr)
     let result = "";
     arr.forEach(x => x = result + x)
 

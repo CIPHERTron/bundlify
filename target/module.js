@@ -1,3 +1,3 @@
 const arr = ["One", "Two", "Three"];
 
-export default arr;
+module.exports = { arr }
