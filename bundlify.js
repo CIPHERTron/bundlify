@@ -25,8 +25,11 @@ const transpileCode = async (filePath) => {
   const { stdout } = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
   
   // Filter out extraneous Bun messages
-  const filteredOutput = stdout.split('\n').filter(line => !line.startsWith('stdout') && !line.startsWith('[')).join('\n');
-  
+  const filteredOutput = stdout
+    .split('\n')
+    .filter(line => !line.includes('stdout') && !line.match(/^\[\d+ms\]/))
+    .join('\n');
+
   return filteredOutput;
 };
 
