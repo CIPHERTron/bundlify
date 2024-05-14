@@ -39,11 +39,19 @@ const bundleFiles = async (entryFile) => {
 
   let modules = {};
   let id = 0;
+  let moduleStack = [];
 
   const addModule = async (filePath) => {
     if (modules[filePath]) {
       return modules[filePath].id;
     }
+
+    if (moduleStack.includes(filePath)) {
+      console.warn(`Circular dependency detected: ${moduleStack.join(' -> ')} -> ${filePath}`);
+      return;
+    }
+
+    moduleStack.push(filePath);
 
     const moduleId = id++;
     const content = readFile(filePath);
@@ -75,6 +83,8 @@ const bundleFiles = async (entryFile) => {
     };
 
     await Promise.all(resolvedDependencies.map(addModule));
+
+    moduleStack.pop();
 
     return moduleId;
   };
