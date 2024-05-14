@@ -16,27 +16,15 @@ const resolveModule = (filePath, baseDir) => {
 };
 
 // Function to transpile code using Bun CLI
-const transpileCode = (code) => {
-  const tempInputPath = path.join(__dirname, 'temp_input.js');
-  const tempOutputPath = path.join(__dirname, 'temp_output.js');
-
-  fs.writeFileSync(tempInputPath, code);
-
-  execSync(`bun build ${tempInputPath} --outdir ${__dirname} --outfile temp_output.js`);
-
-  const transpiledCode = readFile(tempOutputPath);
-
-  fs.unlinkSync(tempInputPath);
-  fs.unlinkSync(tempOutputPath);
-
-  return transpiledCode;
+const transpileCode = (filePath) => {
+  const result = execSync(`bun build ${filePath} --outfile /dev/stdout`).toString();
+  return result;
 };
 
 // Function to parse and bundle the files
 const bundleFiles = (entryFile) => {
   const baseDir = path.dirname(entryFile);
-  const entryContent = readFile(entryFile);
-  
+
   let modules = {};
   let id = 0;
 
@@ -44,12 +32,13 @@ const bundleFiles = (entryFile) => {
     if (modules[filePath]) {
       return modules[filePath].id;
     }
+
     const moduleId = id++;
     const content = readFile(filePath);
     const dirName = path.dirname(filePath);
 
     // Transpile code with Bun
-    const transpiledContent = transpileCode(content);
+    const transpiledContent = transpileCode(filePath);
 
     const dependencies = [];
     const requireRegex = /require\(['"](.+?)['"]\)/g;
@@ -97,7 +86,7 @@ const bundleFiles = (entryFile) => {
 
 // Main function to bundle the project
 const main = () => {
-  const entryFile = path.resolve(__dirname, 'src', 'index.js');
+  const entryFile = path.resolve(__dirname, 'target', 'index.js');
   const bundle = bundleFiles(entryFile);
   const outputPath = path.resolve(__dirname, 'dist', 'bundle.js');
 
