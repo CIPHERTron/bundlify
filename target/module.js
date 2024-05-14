@@ -1,3 +1,1 @@
-const arr = ["One", "Two", "Three"];
-
-module.exports = { arr }
+export const arr = ["One", "Two", "Three"];
