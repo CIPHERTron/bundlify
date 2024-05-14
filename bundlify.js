@@ -1,6 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { execa } from 'execa';
+
+// Convert `import.meta.url` to file path
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Function to read a file and return its content
 const readFile = (filePath) => {
@@ -16,19 +21,19 @@ const resolveModule = (filePath, baseDir) => {
 };
 
 // Function to transpile code using Bun CLI
-const transpileCode = (filePath) => {
-  const result = execSync(`bun build ${filePath} --outfile /dev/stdout`).toString();
-  return result;
+const transpileCode = async (filePath) => {
+  const result = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
+  return result.stdout;
 };
 
 // Function to parse and bundle the files
-const bundleFiles = (entryFile) => {
+const bundleFiles = async (entryFile) => {
   const baseDir = path.dirname(entryFile);
 
   let modules = {};
   let id = 0;
 
-  const addModule = (filePath) => {
+  const addModule = async (filePath) => {
     if (modules[filePath]) {
       return modules[filePath].id;
     }
@@ -38,7 +43,7 @@ const bundleFiles = (entryFile) => {
     const dirName = path.dirname(filePath);
 
     // Transpile code with Bun
-    const transpiledContent = transpileCode(filePath);
+    const transpiledContent = await transpileCode(filePath);
 
     const dependencies = [];
     const requireRegex = /require\(['"](.+?)['"]\)/g;
@@ -62,12 +67,12 @@ const bundleFiles = (entryFile) => {
       dependencies: resolvedDependencies,
     };
 
-    resolvedDependencies.forEach(addModule);
+    await Promise.all(resolvedDependencies.map(addModule));
 
     return moduleId;
   };
 
-  addModule(entryFile);
+  await addModule(entryFile);
 
   const output = [];
 
@@ -85,9 +90,9 @@ const bundleFiles = (entryFile) => {
 };
 
 // Main function to bundle the project
-const main = () => {
+const main = async () => {
   const entryFile = path.resolve(__dirname, 'target', 'index.js');
-  const bundle = bundleFiles(entryFile);
+  const bundle = await bundleFiles(entryFile);
   const outputPath = path.resolve(__dirname, 'dist', 'bundle.js');
 
   if (!fs.existsSync(path.dirname(outputPath))) {
