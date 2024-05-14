@@ -22,8 +22,12 @@ const resolveModule = (filePath, baseDir) => {
 
 // Function to transpile code using Bun CLI
 const transpileCode = async (filePath) => {
-  const result = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
-  return result.stdout;
+  const { stdout } = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
+  
+  // Filter out extraneous Bun messages
+  const filteredOutput = stdout.split('\n').filter(line => !line.startsWith('stdout') && !line.startsWith('[')).join('\n');
+  
+  return filteredOutput;
 };
 
 // Function to parse and bundle the files
