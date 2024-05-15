@@ -7,12 +7,12 @@ import { execa } from 'execa';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Function to read a file and return its content
+// read file helper function
 const readFile = (filePath) => {
   return fs.readFileSync(filePath, 'utf-8');
 };
 
-// Function to resolve the module path
+// resolve the module path helper function
 const resolveModule = (filePath, baseDir) => {
   if (filePath.startsWith('.')) {
     return path.resolve(baseDir, filePath);
@@ -20,25 +20,24 @@ const resolveModule = (filePath, baseDir) => {
   return require.resolve(filePath, { paths: [baseDir] });
 };
 
-// Function to transpile code using Bun CLI
+// function to transpile code using Bun CLI
 const transpileCode = async (filePath) => {
   const { stdout } = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
   
-  // Filter out extraneous Bun messages
+  // filter out unwanted bun messages
   let filteredOutput = stdout
     .split('\n')
     .filter(line => !line.includes('stdout') && !line.match(/^\[\d+ms\]/))
     .join('\n');
 
-  // Replace `export default` with `module.exports` for CommonJS compatibility
+  // CommonJS compatibility: export default -> module.exports
   filteredOutput = filteredOutput.replace(/export\s+default\s+/g, 'module.exports = ');
 
   return filteredOutput;
 };
 
-// Function to parse and bundle the files
+// function to parse and bundle the files
 const bundleFiles = async (entryFile) => {
-  // const baseDir = path.dirname(entryFile);
 
   let modules = {};
   let id = 0;
@@ -153,7 +152,7 @@ const bundleFiles = async (entryFile) => {
   return output.join('\n');
 };
 
-// Main function to bundle the project
+// entrypoint of bundlify - to bundle the project
 const main = async () => {
   const entryFile = path.resolve(__dirname, 'target', 'index.js');
   const bundle = await bundleFiles(entryFile);
