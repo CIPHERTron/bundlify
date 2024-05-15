@@ -20,4 +20,13 @@
 
 ---
 
-*Built with* <3 *by [Pritish](https://pritishsamal.xyz) .aka CIPHERTron*
+## Developer Info
+- Name: **Pritish Samal**
+- Portfolio: [pritishsamal.xyz](https://pritishsamal.xyz)
+- Resume: [pritishsamal.xyz/resume.pdf](https://pritishsamal.xyz/resume.pdf)
+- Technical Blogs: [pritishsamal.xyz/blog](https://pritishsamal.xyz/blog)
+- LinkedIn: [pritishsamal](https://linkedin.com/in/pritishsamal)
+- GitHub: [@CIPHERTron](https://github.com/CIPHERTron)
+- Twitter: [@PritishSamal11](https://twitter.com/PritishSamal11)
+- Email: pritish.samal918@gmail.com
+- Contact: 8018319526
