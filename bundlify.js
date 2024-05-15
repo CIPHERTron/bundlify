@@ -25,10 +25,13 @@ const transpileCode = async (filePath) => {
   const { stdout } = await execa('bun', ['build', filePath, '--outfile', '/dev/stdout']);
   
   // Filter out extraneous Bun messages
-  const filteredOutput = stdout
+  let filteredOutput = stdout
     .split('\n')
     .filter(line => !line.includes('stdout') && !line.match(/^\[\d+ms\]/))
     .join('\n');
+
+  // Replace `export default` with `module.exports` for CommonJS compatibility
+  filteredOutput = filteredOutput.replace(/export\s+default\s+/g, 'module.exports = ');
 
   return filteredOutput;
 };
@@ -41,8 +44,6 @@ const bundleFiles = async (entryFile) => {
   let id = 0;
   let moduleStack = [];
 
-
-  // function to check circular dependency
   const addModule = async (filePath) => {
     if (modules[filePath]) {
       return modules[filePath].id;
@@ -53,7 +54,7 @@ const bundleFiles = async (entryFile) => {
       return;
     }
 
-    // console.log(`Processing module: ${filePath}`);
+    console.log(`Processing module: ${filePath}`);
     moduleStack.push(filePath);
 
     const moduleId = id++;
@@ -77,7 +78,7 @@ const bundleFiles = async (entryFile) => {
 
     // Transpile code with Bun
     const transpiledContent = await transpileCode(filePath);
-    // console.log(`Transpiled content of ${filePath}:\n${transpiledContent}`);
+    console.log(`Transpiled content of ${filePath}:\n${transpiledContent}`);
 
     modules[filePath] = {
       id: moduleId,
@@ -86,7 +87,7 @@ const bundleFiles = async (entryFile) => {
       dependencies: resolvedDependencies,
     };
 
-    // console.log(`Dependencies of ${filePath}: ${resolvedDependencies.join(', ')}`);
+    console.log(`Dependencies of ${filePath}: ${resolvedDependencies.join(', ')}`);
 
     await Promise.all(resolvedDependencies.map(async (dep) => {
       if (moduleStack.includes(dep)) {
