@@ -38,23 +38,29 @@ const transpileCode = async (filePath) => {
 
 // Function to parse and bundle the files
 const bundleFiles = async (entryFile) => {
-  const baseDir = path.dirname(entryFile);
+  // const baseDir = path.dirname(entryFile);
 
   let modules = {};
   let id = 0;
   let moduleStack = [];
 
+  // add logic to detect circular dependency
   const addModule = async (filePath) => {
     if (modules[filePath]) {
       return modules[filePath].id;
     }
 
     if (moduleStack.includes(filePath)) {
+      console.log("-----------------------------------------------------------------------")
+      console.log("-----------------------------------------------------------------------")
+      console.log("-----------------------------------------------------------------------")
       console.warn(`Circular dependency detected: ${moduleStack.join(' -> ')} -> ${filePath}`);
+      console.log("-----------------------------------------------------------------------")
+      console.log("-----------------------------------------------------------------------")
+      console.log("-----------------------------------------------------------------------")
       return;
     }
 
-    console.log(`Processing module: ${filePath}`);
     moduleStack.push(filePath);
 
     const moduleId = id++;
@@ -78,7 +84,6 @@ const bundleFiles = async (entryFile) => {
 
     // Transpile code with Bun
     const transpiledContent = await transpileCode(filePath);
-    console.log(`Transpiled content of ${filePath}:\n${transpiledContent}`);
 
     modules[filePath] = {
       id: moduleId,
@@ -87,11 +92,16 @@ const bundleFiles = async (entryFile) => {
       dependencies: resolvedDependencies,
     };
 
-    console.log(`Dependencies of ${filePath}: ${resolvedDependencies.join(', ')}`);
 
     await Promise.all(resolvedDependencies.map(async (dep) => {
       if (moduleStack.includes(dep)) {
+        console.log("-----------------------------------------------------------------------")
+        console.log("-----------------------------------------------------------------------")
+        console.log("-----------------------------------------------------------------------")
         console.warn(`Circular dependency detected: ${moduleStack.join(' -> ')} -> ${dep}`);
+        console.log("-----------------------------------------------------------------------")
+        console.log("-----------------------------------------------------------------------")
+        console.log("-----------------------------------------------------------------------")
       } else {
         await addModule(dep);
       }
