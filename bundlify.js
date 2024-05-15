@@ -41,6 +41,8 @@ const bundleFiles = async (entryFile) => {
   let id = 0;
   let moduleStack = [];
 
+
+  // function to check circular dependency
   const addModule = async (filePath) => {
     if (modules[filePath]) {
       return modules[filePath].id;
@@ -51,29 +53,31 @@ const bundleFiles = async (entryFile) => {
       return;
     }
 
+    // console.log(`Processing module: ${filePath}`);
     moduleStack.push(filePath);
 
     const moduleId = id++;
     const content = readFile(filePath);
     const dirName = path.dirname(filePath);
 
-    // Transpile code with Bun
-    const transpiledContent = await transpileCode(filePath);
-
+    // Parse dependencies from the original content
     const dependencies = [];
     const requireRegex = /require\(['"](.+?)['"]\)/g;
     const importRegex = /import .* from ['"](.+?)['"]/g;
     let match;
 
-    // Find dependencies
-    while ((match = requireRegex.exec(transpiledContent)) !== null) {
+    while ((match = requireRegex.exec(content)) !== null) {
       dependencies.push(match[1]);
     }
-    while ((match = importRegex.exec(transpiledContent)) !== null) {
+    while ((match = importRegex.exec(content)) !== null) {
       dependencies.push(match[1]);
     }
 
     const resolvedDependencies = dependencies.map(dep => resolveModule(dep, dirName));
+
+    // Transpile code with Bun
+    const transpiledContent = await transpileCode(filePath);
+    // console.log(`Transpiled content of ${filePath}:\n${transpiledContent}`);
 
     modules[filePath] = {
       id: moduleId,
@@ -82,7 +86,15 @@ const bundleFiles = async (entryFile) => {
       dependencies: resolvedDependencies,
     };
 
-    await Promise.all(resolvedDependencies.map(addModule));
+    // console.log(`Dependencies of ${filePath}: ${resolvedDependencies.join(', ')}`);
+
+    await Promise.all(resolvedDependencies.map(async (dep) => {
+      if (moduleStack.includes(dep)) {
+        console.warn(`Circular dependency detected: ${moduleStack.join(' -> ')} -> ${dep}`);
+      } else {
+        await addModule(dep);
+      }
+    }));
 
     moduleStack.pop();
 
@@ -114,14 +126,6 @@ const bundleFiles = async (entryFile) => {
 
     return module.exports;
   }
-
-  require.resolve = function(request) {
-    return modules[request] ? request : null;
-  };
-
-  require.ensure = function(request, callback) {
-    callback(require(request));
-  };
 
   return require(${modules[entryFile].id});
 })({
